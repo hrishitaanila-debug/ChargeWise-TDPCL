@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>ChargeWise - EV Charging Scheduler</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e8f5e9;
+    text-align: center;
+    padding: 25px;
+}
+
+.container {
+    background: white;
+    padding: 25px;
+    max-width: 650px;
+    margin: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: green;
+    color: white;
+    padding: 13px 25px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: darkgreen;
+}
+
+h1 {
+    color: green;
+}
+
+h3 {
+    color: #267326;
+}
+
+hr {
+    margin: 20px;
+}
+
+.result {
+    background-color: #e8f5e9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin: 12px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dashboard {
+    margin-top: 25px;
+}
+
+.chart-box {
+    background: white;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 10px;
+}
+
+.chart-box canvas {
+    max-width: 100%;
+}
+
+.schedule {
+    background-color: #fff3cd;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.cost {
+    background-color: #e3f2fd;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.error {
+    background-color: #ffdddd;
+    color: red;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.savings {
+    background-color: #c8e6c9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.savings h2 {
+    color: green;
+    font-size: 32px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+<h1>ChargeWise ☀️</h1>
+
+<h3>Intelligent EV Charging Scheduler</h3>
+
+
+{% if error %}
+
+<div class="error">
+<p>{{ error }}</p>
+</div>
+
+{% endif %}
+
+
+<form action="/schedule" method="POST">
+
+<h3>EV Information</h3>
+
+<input type="text"
+name="vehicle"
+placeholder="Vehicle Name"
+required>
+
+<input type="number"
+name="battery"
+placeholder="Current Battery (%)"
+min="0" max="100"
+step="any" required>
+
+<input type="number"
+name="required"
+placeholder="Required Battery (%)"
+min="0" max="100"
+step="any" required>
+
+<input type="number"
+name="capacity"
+placeholder="Battery Capacity (kWh)"
+min="0.1" step="any" required>
+
+<input type="number"
+name="charging_power"
+placeholder="Charging Power (kW)"
+min="0.1" step="any" required>
+
+<label>Departure Time:</label>
+
+<input type="time"
+name="departure" required>
+
+<hr>
+
+<h3>☀️ Solar Energy Information</h3>
+
+<input type="number"
+name="solar_power"
+placeholder="Available Solar Power (kW)"
+min="0" step="any" required>
+
+<label>Solar Start Time:</label>
+
+<input type="time"
+name="solar_start" required>
+
+<label>Solar End Time:</label>
+
+<input type="time"
+name="solar_end" required>
+
+<hr>
+
+<h3>Electricity Cost Information</h3>
+
+<input type="number"
+name="electricity_price"
+placeholder="Electricity Price (₹ per kWh)"
+min="0" step="any" required>
+
+<br><br>
+
+<button type="submit">
+Generate Charging Schedule
+</button>
+
+</form>
+
+
+{% if energy is defined %}
+
+<div class="result">
+
+<h2>Charging Results</h2>
+
+<h3>Vehicle Details</h3>
+
+<div class="card">
+
+<p>Vehicle: {{ vehicle }}</p>
+
+<p>Current Battery: {{ battery }}%</p>
+
+<p>Required Battery: {{ required }}%</p>
+
+<p>Departure Time: {{ departure }}</p>
+
+</div>
+
+
+<h3>Energy Analysis</h3>
+
+<div class="card">
+
+<p>Energy Required: {{ energy }} kWh</p>
+
+<p>Charging Time: {{ charging_time }} hours</p>
+
+<p>Solar Energy Available: {{ solar_available }} kWh</p>
+
+<p>Solar Energy Used: {{ solar_used }} kWh</p>
+
+<p>Grid Energy Required: {{ grid_energy }} kWh</p>
+
+<p>Solar Contribution: {{ solar_percentage }}%</p>
+
+</div>
+
+
+<h3>Intelligent Charging Schedule</h3>
+
+<div class="schedule">
+
+{% if charging_possible %}
+
+<h3>Charging Schedule Generated!</h3>
+
+{% else %}
+
+<h3>Charging Time Insufficient</h3>
+
+{% endif %}
+
+<p>{{ schedule_message }}</p>
+
+</div>
+
+
+<hr>
+
+
+<!-- COST COMPARISON -->
+
+<div class="dashboard">
+
+<h2>📊 ChargeWise Visual Dashboard</h2>
+
+<h3>Charging Cost Comparison</h3>
+
+<div class="cost">
+
+<p>Electricity Price: ₹{{ electricity_price }}/kWh</p>
+
+<p>Grid-Only Charging Cost: ₹{{ grid_only_cost }}</p>
+
+<p>Solar-Priority Charging Cost: ₹{{ solar_charging_cost }}</p>
+
+</div>
+
+
+<!-- SAVINGS -->
+
+<div class="savings">
+
+<h3>Estimated Money Saved</h3>
+
+<h2>₹{{ money_saved }}</h2>
+
+<p>Savings Percentage: {{ savings_percentage }}%</p>
+
+</div>
+
+
+<!-- PIE CHART -->
+
+<div class="chart-box">
+
+<h3>Solar vs Grid Energy Distribution</h3>
+
+<canvas id="energyChart"></canvas>
+
+</div>
+
+
+<!-- BAR CHART -->
+
+<div class="chart-box">
+
+<h3>Charging Cost Comparison</h3>
+
+<canvas id="costChart"></canvas>
+
+</div>
+
+
+<!-- ENERGY SUMMARY -->
+
+<h3>Energy Statistics</h3>
+
+<div class="card">
+
+<p>Total Energy Required: {{ energy }} kWh</p>
+
+<p>Solar Energy Used: {{ solar_used }} kWh</p>
+
+<p>Grid Energy Used: {{ grid_energy }} kWh</p>
+
+<p>Solar Contribution: {{ solar_percentage }}%</p>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+// Solar and Grid Energy Pie Chart
+
+const energyChart = new Chart(
+    document.getElementById('energyChart'),
+    {
+        type: 'pie',
+
+        data: {
+
+            labels: ['Solar Energy', 'Grid Energy'],
+
+            datasets: [{
+
+                data: [
+                    {{ solar_used }},
+                    {{ grid_energy }}
+                ],
+
+                backgroundColor: [
+                    '#4CAF50',
+                    '#2196F3'
+                ]
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+
+                legend: {
+                    position: 'bottom'
+                }
+
+            }
+
+        }
+
+    }
+);
+
+
+// Charging Cost Bar Chart
+
+const costChart = new Chart(
+    document.getElementById('costChart'),
+    {
+        type: 'bar',
+
+        data: {
+
+            labels: [
+                'Grid-Only Charging',
+                'Solar-Priority Charging'
+            ],
+
+            datasets: [{
+
+                label: 'Charging Cost (₹)',
+
+                data: [
+                    {{ grid_only_cost }},
+                    {{ solar_charging_cost }}
+                ],
+
+                backgroundColor: [
+                    '#2196F3',
+                    '#4CAF50'
+                ]
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    title: {
+                        display: true,
+                        text: 'Cost in Rupees'
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+{% endif %}
+
+</div>
+
+</body>
+
+</html>

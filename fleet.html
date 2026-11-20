@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>ChargeWise - Fleet Management</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #e8f5e9;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .container {
+            background: white;
+            max-width: 750px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1, h3 {
+            color: green;
+        }
+
+        .vehicle {
+            background: #f1f8e9;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: green;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: darkgreen;
+        }
+
+        .result {
+            background: #e8f5e9;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+
+        .error {
+            background: #ffdddd;
+            color: darkred;
+            padding: 12px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>ChargeWise ☀️</h1>
+
+    <h3>Multiple EV Management System</h3>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/fleet" method="POST">
+
+        {% for i in range(1, 4) %}
+
+        <div class="vehicle">
+
+            <h3>Vehicle {{ i }}</h3>
+
+            <input
+                type="text"
+                name="vehicle{{ i }}"
+                placeholder="Vehicle Name"
+                required
+            >
+
+            <input
+                type="number"
+                name="battery{{ i }}"
+                placeholder="Current Battery (%)"
+                min="0"
+                max="100"
+                step="any"
+                required
+            >
+
+            <input
+                type="number"
+                name="required{{ i }}"
+                placeholder="Required Battery (%)"
+                min="0"
+                max="100"
+                step="any"
+                required
+            >
+
+            <input
+                type="number"
+                name="capacity{{ i }}"
+                placeholder="Battery Capacity (kWh)"
+                min="0.1"
+                step="any"
+                required
+            >
+
+            <input
+                type="number"
+                name="power{{ i }}"
+                placeholder="Charging Power (kW)"
+                min="0.1"
+                step="any"
+                required
+            >
+
+            <label>Departure Time:</label>
+
+            <input
+                type="time"
+                name="departure{{ i }}"
+                required
+            >
+
+        </div>
+
+        {% endfor %}
+
+        <h3>Solar Information ☀️</h3>
+
+        <input
+            type="number"
+            name="solar_power"
+            placeholder="Available Solar Power (kW)"
+            min="0"
+            step="any"
+            required
+        >
+
+        <button type="submit">
+            Generate Fleet Schedule
+        </button>
+
+    </form>
+
+
+    {% if results %}
+
+    <div class="result">
+
+        <h2>Fleet Charging Results</h2>
+
+        <p>Total Vehicles: {{ results|length }}</p>
+
+        <p>Total Energy Required: {{ total_energy }} kWh</p>
+
+        {% for item in results %}
+
+        <div class="card">
+
+            <h3>{{ item.vehicle }}</h3>
+
+            <p>Current Battery: {{ item.battery }}%</p>
+
+            <p>Required Battery: {{ item.required }}%</p>
+
+            <p>Departure Time: {{ item.departure }}</p>
+
+            <p>Energy Required: {{ item.energy }} kWh</p>
+
+            <p>Charging Duration: {{ item.duration }} hours</p>
+
+            <p>Priority: {{ item.priority }}</p>
+
+            <p>Charging Start: {{ item.start }}</p>
+
+            <p>Charging Finish: {{ item.finish }}</p>
+
+            <p>{{ item.status }}</p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>
